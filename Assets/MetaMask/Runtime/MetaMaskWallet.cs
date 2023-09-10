@@ -13,6 +13,7 @@ using MetaMask.Transports;
 using Newtonsoft.Json;
 using evm.net;
 using evm.net.Models;
+using UnityEditor;
 
 namespace MetaMask
 {
@@ -1253,6 +1254,14 @@ namespace MetaMask
             if (this._dataManager != null && !sessionEnded)
             {
                 this._dataManager.Save(this.sessionId, this.session.Data);
+            }
+        }
+
+        public void LoadSession()
+        {
+            if (this._dataManager != null && sessionEnded)
+            {
+                this._dataManager.Load(this.sessionId, this.session.Data);
             }
         }
 
