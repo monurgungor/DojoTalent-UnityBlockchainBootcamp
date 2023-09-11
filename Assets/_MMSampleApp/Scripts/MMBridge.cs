@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using MetaMask;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,10 +18,12 @@ namespace MMSampleApp
         [SerializeField] private Button _connectButton;
         [SerializeField] private Button _disconnectButton;
         [SerializeField] private Button _txButton;
+        [SerializeField] private Button _requestBalanceButton;
 
 
         [Header("Text")] 
         [SerializeField] private TMP_Text _walletAddressText;
+        [SerializeField] private TMP_Text _balanceText;
         [SerializeField] private TMP_Text _txText;
 
         private MetaMaskWallet _wallet => MetaMaskUnity.Instance.Wallet;
@@ -40,6 +45,7 @@ namespace MMSampleApp
             
             _connectButton.onClick.AddListener(Connect);
             _disconnectButton.onClick.AddListener(Disconnect);
+            _requestBalanceButton.onClick.AddListener(RequestBalance);
             _txButton.onClick.AddListener(SendTransaction);
 
             Debug.Log($"[MMSample] Button Listeners Added");
@@ -58,6 +64,7 @@ namespace MMSampleApp
         private void Connect() => _wallet.Connect();
         private void Disconnect() => _wallet.Disconnect();
         
+        #region Ethereum Requests
         private async void SendTransaction()
         {
             var wallet = MetaMaskUnity.Instance.Wallet;
@@ -74,10 +81,29 @@ namespace MMSampleApp
                 Method = "eth_sendTransaction",
                 Parameters = new MetaMaskTransaction[] { transactionParams }
             };
-            await wallet.Request(request);
+            var res = await _wallet.Request(request);
+            Debug.Log($"[MMSample] RequestBalance, Transaction Hash:{res}");
+            _txText.text = "Transaction Hash: " + res;
         }
 
+        private async void RequestBalance()
+        {
+            
+            var request = new MetaMaskEthereumRequest
+            {
+                Method = "eth_getBalance",
+                Parameters = new[] { $"{MetaMaskUnity.Instance.Wallet.SelectedAddress}", "latest" }
+            };
 
+            object balanceRes = await _wallet.Request(request);
+            string dummyBalance = balanceRes.ToString();
+            var ethValue = BigInteger.Parse(dummyBalance.Substring(2), System.Globalization.NumberStyles.HexNumber) / BigInteger.Pow(10, 18);
+            
+            Debug.Log($"[MMSample] RequestBalance, balance:{ethValue}");
+            _balanceText.text = "Balance: " + ethValue;
+        }
+
+        #endregion
 
         #region MMCallbacks
         
@@ -107,32 +133,18 @@ namespace MMSampleApp
         private void OnRequestReceived(object sender, MetaMaskEthereumRequestResultEventArgs e)
         {
             Debug.Log($"[MMSample] OnRequestReceived, walletAddress:{_wallet.SelectedAddress}, e.Request.Method:{e.Request.Method}, e. Result:{e.Result}");
-            // try
-            // {
-            //     var json  = e.Result;
-            //     var parsedJson = JObject.Parse(json);
-            //     var result = parsedJson["data"]["result"];
-            //     var resultList = result.ToObject<List<string>>();
-            //     var walletAddress = resultList.First();
-            //     Debug.Log(message: $"[MMSample] OnRequestReceived, wallet Address: {walletAddress}");
-            // }
-            // catch (Exception exception)
-            // {
-            //     Debug.LogError(exception);
-            //     throw;
-            // }
             try
             {
                 var json  = e.Result;
                 var parsedJson = JObject.Parse(json);
-                var tx = parsedJson["data"]["result"];
-                Debug.Log(message: $"[MMSample] OnRequestReceived, wallet Address: {tx}");
-                _txText.text = "Transaction Hash: " + tx.ToString();
-
+                var result = parsedJson["data"]["result"];
+                var resultList = result.ToObject<List<string>>();
+                var walletAddress = resultList.First();
+                Debug.Log(message: $"[MMSample] OnRequestReceived, wallet Address: {walletAddress}");
             }
             catch (Exception exception)
             {
-                Debug.LogError(exception);
+                Debug.LogWarning(exception);
                 throw;
             }
 
