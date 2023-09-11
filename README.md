@@ -19,4 +19,4 @@ If you experience any other build problems for Android, go to Build Settings > P
 #### MetaMask Wallet Doesn't Connect
 If you're having trouble connecting to the MetaMask wallet, it may be due to a bug in the MetaMask phone app. Try killing the app completely, restart the Unity game, and then try to reconnect again.
 #### Switching to Testnet and Testing Transactions
-To test transactions, you first need to switch your MetaMask network to a testnet, preferably Goerli. Next, you need to acquire some Goerli ETH by using a faucet such as https://goerli-faucet.pk910.de/. Once you have the Goerli ETH, you can send it to an address that has a Goerli Ether address like a regular transaction.
+To test transactions, you first need to switch your MetaMask network to a testnet, preferably Goerli. Next, you need to acquire some Goerli ETH by using a faucet such as https://goerli-faucet.pk910.de/. Once you have the Goerli ETH, you can send it to an address that has a Goerli Ether address like a regular transaction (using sendTransaction method).
